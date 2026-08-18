@@ -1,46 +1,64 @@
 import matplotlib.pyplot as plt
 
 from simulation.aircraft import Aircraft
-from reachability.glide import calculate_glide_distance
-from reachability.reachable_area import generate_reachable_area
+from reachability.reachable_area import generate_wind_aware_area
 
 
 print("=================================")
-print("        AERIS 0.2")
+print("        AERIS 0.3")
 print("=================================")
 
 aircraft = Aircraft()
 
-# Simulate emergency
 aircraft.engine_failure()
 
-# Calculate maximum theoretical glide distance
-glide_distance = calculate_glide_distance(
-    aircraft.altitude,
-    aircraft.glide_ratio
-)
+print("\n--- AIRCRAFT ---")
+print(f"Altitude: {aircraft.altitude} m")
+print(f"Airspeed: {aircraft.airspeed} m/s")
+print(f"Glide ratio: {aircraft.glide_ratio}:1")
 
-print(f"\nTheoretical glide distance: {glide_distance / 1000:.2f} km")
+print("\n--- WIND ---")
+print(f"Wind speed: {aircraft.wind_speed} m/s")
+print(f"Wind direction: {aircraft.wind_direction}°")
 
 # Generate reachable area
-x, y = generate_reachable_area(glide_distance)
+x, y, distances = generate_wind_aware_area(
+    aircraft.altitude,
+    aircraft.glide_ratio,
+    aircraft.airspeed,
+    aircraft.wind_speed,
+    aircraft.wind_direction
+)
+
+# Find minimum and maximum reachable distances
+minimum_range = distances.min()
+maximum_range = distances.max()
+
+print("\n--- REACHABILITY ---")
+print(f"Minimum range: {minimum_range / 1000:.2f} km")
+print(f"Maximum range: {maximum_range / 1000:.2f} km")
 
 # Plot
-plt.figure(figsize=(8, 8))
+plt.figure(figsize=(9, 9))
 
-plt.plot(x / 1000, y / 1000)
+plt.plot(
+    x / 1000,
+    y / 1000,
+    label="Wind-aware reachable boundary"
+)
 
-# Aircraft position
+# Aircraft
 plt.scatter(0, 0, s=100)
 
 plt.text(0, 0, "  AIRCRAFT")
 
-plt.xlabel("Distance East/West (km)")
-plt.ylabel("Distance North/South (km)")
+plt.xlabel("East / West (km)")
+plt.ylabel("North / South (km)")
 
-plt.title("AERIS — Theoretical Reachable Area")
+plt.title("AERIS 0.3 — Wind-Aware Reachability")
 
 plt.axis("equal")
 plt.grid(True)
+plt.legend()
 
 plt.show()

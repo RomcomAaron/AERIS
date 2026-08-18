@@ -6,6 +6,8 @@ class Aircraft:
         self.mass = 1100.0          # kg
         self.glide_ratio = 10.0     # 10:1
         self.heading = 0.0          # degrees
+        self.wind_speed = 30.0
+        self.wind_direction = 90.0
 
         self.engine_running = True
 

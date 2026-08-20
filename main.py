@@ -2,201 +2,360 @@ import matplotlib.pyplot as plt
 
 from landing.site_detection import find_reachable_sites
 from landing.risk_engine import calculate_risk
+
 from simulation.aircraft import Aircraft
-from reachability.reachable_area import generate_wind_aware_area
+
+from reachability.reachable_area import (
+    generate_wind_aware_area
+)
 
 
 print("=================================")
-print("        AERIS 0.5")
+print("        AERIS 0.6")
 print("=================================")
 
-# ---------------------------------
-# Create aircraft
-# ---------------------------------
+
+# =================================
+# CREATE AIRCRAFT
+# =================================
 
 aircraft = Aircraft()
 
-# Simulate emergency
+
+# =================================
+# SIMULATE EMERGENCY
+# =================================
+
 aircraft.engine_failure()
 
 
-# ---------------------------------
-# Aircraft information
-# ---------------------------------
+# =================================
+# AIRCRAFT INFORMATION
+# =================================
 
 print("\n--- AIRCRAFT ---")
-print(f"Altitude: {aircraft.altitude} m")
-print(f"Airspeed: {aircraft.airspeed} m/s")
-print(f"Glide ratio: {aircraft.glide_ratio}:1")
+
+print(
+    f"Altitude: "
+    f"{aircraft.altitude} m"
+)
+
+print(
+    f"Airspeed: "
+    f"{aircraft.airspeed} m/s"
+)
+
+print(
+    f"Glide ratio: "
+    f"{aircraft.glide_ratio}:1"
+)
 
 
-# ---------------------------------
-# Wind information
-# ---------------------------------
+# =================================
+# WIND INFORMATION
+# =================================
 
 print("\n--- WIND ---")
-print(f"Wind speed: {aircraft.wind_speed} m/s")
-print(f"Wind direction: {aircraft.wind_direction}°")
+
+print(
+    f"Wind speed: "
+    f"{aircraft.wind_speed} m/s"
+)
+
+print(
+    f"Wind direction: "
+    f"{aircraft.wind_direction}°"
+)
 
 
-# ---------------------------------
-# Generate reachable area
-# ---------------------------------
+# =================================
+# GENERATE REACHABLE AREA
+# =================================
 
 x, y, distances = generate_wind_aware_area(
+
     aircraft.altitude,
+
     aircraft.glide_ratio,
+
     aircraft.airspeed,
+
     aircraft.wind_speed,
+
     aircraft.wind_direction
 )
 
 
-# Find minimum and maximum range
+# =================================
+# RANGE
+# =================================
+
 minimum_range = distances.min()
+
 maximum_range = distances.max()
 
+
 print("\n--- REACHABILITY ---")
-print(f"Minimum range: {minimum_range / 1000:.2f} km")
-print(f"Maximum range: {maximum_range / 1000:.2f} km")
+
+print(
+    f"Minimum range: "
+    f"{minimum_range / 1000:.2f} km"
+)
+
+print(
+    f"Maximum range: "
+    f"{maximum_range / 1000:.2f} km"
+)
 
 
-# ---------------------------------
-# Candidate landing sites
-# ---------------------------------
+# =================================
+# LANDING SITES
+# =================================
 
 sites = [
+
     {
         "name": "Field A",
         "type": "field",
+
         "x": 10,
-        "y": 5
+        "y": 5,
+
+        "length": 600,
+        "width": 80,
+
+        "surface": "grass",
+
+        "slope": 2,
+
+        "population": 10,
+
+        "obstacles": 2
     },
+
+
     {
         "name": "Highway B",
         "type": "highway",
+
         "x": 20,
-        "y": 10
+        "y": 10,
+
+        "length": 1200,
+        "width": 20,
+
+        "surface": "asphalt",
+
+        "slope": 1,
+
+        "population": 100,
+
+        "obstacles": 5
     },
+
+
     {
         "name": "Airport C",
         "type": "airport",
+
         "x": 35,
-        "y": 5
+        "y": 5,
+
+        "length": 2500,
+        "width": 45,
+
+        "surface": "asphalt",
+
+        "slope": 1,
+
+        "population": 20,
+
+        "obstacles": 1
     },
+
+
     {
         "name": "City D",
         "type": "city",
+
         "x": 15,
-        "y": -10
+        "y": -10,
+
+        "length": 300,
+        "width": 50,
+
+        "surface": "concrete",
+
+        "slope": 4,
+
+        "population": 5000,
+
+        "obstacles": 20
     },
+
+
     {
         "name": "Field E",
         "type": "field",
+
         "x": -12,
-        "y": -8
+        "y": -8,
+
+        "length": 250,
+        "width": 40,
+
+        "surface": "grass",
+
+        "slope": 8,
+
+        "population": 30,
+
+        "obstacles": 8
     }
+
 ]
 
 
-# ---------------------------------
-# Find reachable sites
-# ---------------------------------
+# =================================
+# FIND REACHABLE SITES
+# =================================
 
 reachable_sites = find_reachable_sites(
+
     sites,
+
     0,
+
     0,
+
     maximum_range / 1000
 )
 
 
-# ---------------------------------
-# Calculate risk
-# ---------------------------------
+# =================================
+# RISK ANALYSIS
+# =================================
 
 print("\n--- CANDIDATE LANDING SITES ---")
+
 
 for site in reachable_sites:
 
     risk = calculate_risk(
+
         site,
+
         maximum_range / 1000
     )
 
     site["risk"] = risk
 
+
     print(
         f"{site['name']} "
         f"({site['type']}) "
-        f"- {site['distance']:.2f} km "
-        f"- Risk: {risk:.3f}"
+        f"- Distance: "
+        f"{site['distance']:.2f} km "
+        f"- Risk: "
+        f"{risk:.3f}"
     )
 
 
-# ---------------------------------
-# Rank landing sites
-# ---------------------------------
+# =================================
+# SORT BY RISK
+# =================================
 
 reachable_sites.sort(
-    key=lambda site: site["risk"]
+
+    key=lambda site:
+    site["risk"]
 )
 
 
-# ---------------------------------
-# AERIS recommendation
-# ---------------------------------
+# =================================
+# RECOMMENDATION
+# =================================
 
 print("\n--- AERIS RECOMMENDATION ---")
+
 
 if reachable_sites:
 
     best_site = reachable_sites[0]
 
-    print(f"Recommended site: {best_site['name']}")
-    print(f"Type: {best_site['type']}")
-    print(f"Distance: {best_site['distance']:.2f} km")
-    print(f"Risk score: {best_site['risk']:.3f}")
+
+    print(
+        f"Recommended site: "
+        f"{best_site['name']}"
+    )
+
+    print(
+        f"Type: "
+        f"{best_site['type']}"
+    )
+
+    print(
+        f"Distance: "
+        f"{best_site['distance']:.2f} km"
+    )
+
+    print(
+        f"Risk score: "
+        f"{best_site['risk']:.3f}"
+    )
 
 else:
 
-    print("NO REACHABLE LANDING SITE FOUND")
+    print(
+        "NO REACHABLE "
+        "LANDING SITE FOUND"
+    )
 
 
-# ---------------------------------
-# Plot reachable area
-# ---------------------------------
+# =================================
+# PLOT
+# =================================
 
-plt.figure(figsize=(9, 9))
+plt.figure(
+    figsize=(9, 9)
+)
 
 
 # Reachable boundary
 
 plt.plot(
+
     x / 1000,
+
     y / 1000,
+
     label="Reachable boundary"
 )
 
 
-# Aircraft position
+# Aircraft
 
 plt.scatter(
+
     0,
+
     0,
+
     s=100
 )
 
+
 plt.text(
+
     0,
+
     0,
+
     "  AIRCRAFT"
 )
 
 
-# ---------------------------------
-# Plot landing sites
-# ---------------------------------
+# Landing sites
 
 for site in sites:
 
@@ -208,35 +367,51 @@ for site in sites:
 
         marker = "x"
 
+
     plt.scatter(
+
         site["x"],
+
         site["y"],
+
         marker=marker,
+
         s=100
     )
 
+
     plt.text(
+
         site["x"],
+
         site["y"],
+
         f"  {site['name']}"
     )
 
 
-# ---------------------------------
-# Graph settings
-# ---------------------------------
+# Graph labels
 
-plt.xlabel("East / West (km)")
-plt.ylabel("North / South (km)")
+plt.xlabel(
+    "East / West (km)"
+)
+
+plt.ylabel(
+    "North / South (km)"
+)
+
 
 plt.title(
-    "AERIS 0.5 — Emergency Landing Site Analysis"
+    "AERIS 0.6 — "
+    "Emergency Landing Analysis"
 )
+
 
 plt.axis("equal")
 
 plt.grid(True)
 
 plt.legend()
+
 
 plt.show()

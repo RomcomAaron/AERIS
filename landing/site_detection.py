@@ -12,10 +12,15 @@ def calculate_distance(x1, y1, x2, y2):
     )
 
 
-def find_reachable_sites(sites, aircraft_x, aircraft_y, max_range):
+def find_reachable_sites(
+    sites,
+    aircraft_x,
+    aircraft_y,
+    max_range
+):
     """
-    Find landing sites that are within the aircraft's
-    theoretical maximum range.
+    Find landing sites that are within
+    the aircraft's maximum theoretical range.
 
     Coordinates are in kilometres.
     """
@@ -32,7 +37,9 @@ def find_reachable_sites(sites, aircraft_x, aircraft_y, max_range):
         )
 
         if distance <= max_range:
+
             site_copy = site.copy()
+
             site_copy["distance"] = distance
             site_copy["reachable"] = True
 

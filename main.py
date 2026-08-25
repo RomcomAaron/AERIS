@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+from landing.trajectory import evaluate_trajectory
 from landing.approach import evaluate_approach
 from landing.site_detection import find_reachable_sites
 from landing.risk_engine import calculate_risk
@@ -283,6 +284,39 @@ for site in reachable_sites:
         approach["feasible"]
     )
 
+        # -----------------------------
+    # Trajectory calculation
+    # -----------------------------
+
+    trajectory = evaluate_trajectory(
+
+        aircraft.altitude,
+
+        aircraft.glide_ratio,
+
+        0,
+
+        0,
+
+        aircraft.heading,
+
+        site["x"],
+
+        site["y"]
+    )
+
+    site["trajectory_feasible"] = (
+        trajectory["feasible"]
+    )
+
+    site["bearing"] = (
+        trajectory["bearing"]
+    )
+
+    site["remaining_altitude"] = (
+        trajectory["remaining_altitude"]
+    )
+
 
     print(
         f"{site['name']} "
@@ -294,17 +328,11 @@ for site in reachable_sites:
         f"- Turn: "
         f"{site['turn_angle']:.1f}° "
         f"- Approach: "
-        f"{'YES' if site['approach_feasible'] else 'NO'}"
-    )
-
-
-    print(
-        f"{site['name']} "
-        f"({site['type']}) "
-        f"- Distance: "
-        f"{site['distance']:.2f} km "
-        f"- Risk: "
-        f"{risk:.3f}"
+        f"{'YES' if site['approach_feasible'] else 'NO'} "
+        f"- Altitude margin: "
+        f"{site['remaining_altitude']:.0f} m "
+        f"- Trajectory: "
+        f"{'YES' if site['trajectory_feasible'] else 'NO'}"
     )
 
 
@@ -315,7 +343,11 @@ for site in reachable_sites:
 feasible_sites = [
     site
     for site in reachable_sites
-    if site["approach_feasible"]
+    if (
+        site["approach_feasible"]
+        and
+        site["trajectory_feasible"]
+    )
 ]
 
 

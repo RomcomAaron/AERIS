@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+from landing.coordinates import latlon_to_xy
 from landing.site_loader import load_landing_sites
 from landing.trajectory import evaluate_trajectory
 from landing.approach import evaluate_approach
@@ -12,7 +13,7 @@ from reachability.reachable_area import (
 
 
 print("=================================")
-print("        AERIS 0.7")
+print("        AERIS 1.0")
 print("=================================")
 
 
@@ -22,6 +23,8 @@ print("=================================")
 
 aircraft = Aircraft()
 
+aircraft_latitude = 13.0827
+aircraft_longitude = 80.2707
 
 # =================================
 # SIMULATE EMERGENCY
@@ -117,6 +120,19 @@ sites = load_landing_sites(
     "data/landing_sites.json"
 )
 
+for site in sites:
+
+    x, y = latlon_to_xy(
+
+        site["latitude"],
+        site["longitude"],
+
+        aircraft_latitude,
+        aircraft_longitude
+    )
+
+    site["x"] = x
+    site["y"] = y
 
 # =================================
 # FIND REACHABLE SITES
@@ -379,8 +395,7 @@ plt.ylabel(
 
 
 plt.title(
-    "AERIS 0.6 — "
-    "Emergency Landing Analysis"
+    "AERIS 1.0 — Geographic Emergency Landing Analysis"
 )
 
 

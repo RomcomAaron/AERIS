@@ -1,17 +1,16 @@
 import matplotlib.pyplot as plt
 
+from landing.approach import evaluate_approach
 from landing.site_detection import find_reachable_sites
 from landing.risk_engine import calculate_risk
-
 from simulation.aircraft import Aircraft
-
 from reachability.reachable_area import (
     generate_wind_aware_area
 )
 
 
 print("=================================")
-print("        AERIS 0.6")
+print("        AERIS 0.7")
 print("=================================")
 
 
@@ -130,7 +129,9 @@ sites = [
 
         "population": 10,
 
-        "obstacles": 2
+        "obstacles": 2,
+
+        "heading": 20
     },
 
 
@@ -150,7 +151,9 @@ sites = [
 
         "population": 100,
 
-        "obstacles": 5
+        "obstacles": 5,
+
+        "heading": 90
     },
 
 
@@ -170,7 +173,9 @@ sites = [
 
         "population": 20,
 
-        "obstacles": 1
+        "obstacles": 1,
+
+        "heading": 100
     },
 
 
@@ -190,7 +195,9 @@ sites = [
 
         "population": 5000,
 
-        "obstacles": 20
+        "obstacles": 20,
+
+        "heading": 180
     },
 
 
@@ -210,7 +217,9 @@ sites = [
 
         "population": 30,
 
-        "obstacles": 8
+        "obstacles": 8,
+
+        "heading": 270
     }
 
 ]
@@ -241,14 +250,52 @@ print("\n--- CANDIDATE LANDING SITES ---")
 
 for site in reachable_sites:
 
+    # -----------------------------
+    # Risk calculation
+    # -----------------------------
+
     risk = calculate_risk(
-
         site,
-
         maximum_range / 1000
     )
 
     site["risk"] = risk
+
+
+    # -----------------------------
+    # Approach calculation
+    # -----------------------------
+
+    approach = evaluate_approach(
+
+        aircraft.heading,
+
+        site["heading"],
+
+        maximum_turn=45
+    )
+
+    site["turn_angle"] = (
+        approach["turn_angle"]
+    )
+
+    site["approach_feasible"] = (
+        approach["feasible"]
+    )
+
+
+    print(
+        f"{site['name']} "
+        f"({site['type']}) "
+        f"- Distance: "
+        f"{site['distance']:.2f} km "
+        f"- Risk: "
+        f"{risk:.3f} "
+        f"- Turn: "
+        f"{site['turn_angle']:.1f}° "
+        f"- Approach: "
+        f"{'YES' if site['approach_feasible'] else 'NO'}"
+    )
 
 
     print(
@@ -265,8 +312,14 @@ for site in reachable_sites:
 # SORT BY RISK
 # =================================
 
-reachable_sites.sort(
+feasible_sites = [
+    site
+    for site in reachable_sites
+    if site["approach_feasible"]
+]
 
+
+feasible_sites.sort(
     key=lambda site:
     site["risk"]
 )
@@ -279,9 +332,9 @@ reachable_sites.sort(
 print("\n--- AERIS RECOMMENDATION ---")
 
 
-if reachable_sites:
+if feasible_sites:
 
-    best_site = reachable_sites[0]
+    best_site = feasible_sites[0]
 
 
     print(
@@ -307,9 +360,9 @@ if reachable_sites:
 else:
 
     print(
-        "NO REACHABLE "
-        "LANDING SITE FOUND"
-    )
+    "NO REACHABLE SITE WITH "
+    "FEASIBLE APPROACH FOUND"
+)
 
 
 # =================================

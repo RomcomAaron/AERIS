@@ -18,7 +18,9 @@ def get_map_features(
     tags = {
         "highway": True,
         "aeroway": True,
-        "landuse": True
+        "landuse": True,
+        "natural": True,
+        "leisure": True
     }
 
     try:
@@ -34,7 +36,44 @@ def get_map_features(
             f"{len(features)} map features."
         )
 
-        return features
+        print("\n--- OSM TAG INSPECTION ---")
+
+        for column in [
+            "landuse",
+            "natural",
+            "leisure",
+            "highway",
+            "aeroway"
+        ]:
+
+            if column in features.columns:
+
+                values = (
+                    features[column]
+                    .dropna()
+                    .astype(str)
+                    .value_counts()
+                    .head(15)
+                )
+
+                print(f"\n{column}:")
+
+                if len(values) == 0:
+                    print("  No values found.")
+
+                else:
+                    for value, count in values.items():
+                        print(
+                            f"  {value}: {count}"
+                        )
+
+            else:
+
+                print(
+                    f"\n{column}: COLUMN NOT FOUND"
+                )
+
+                return features
 
     except Exception as error:
 
@@ -93,7 +132,27 @@ def classify_features(features):
         elif feature.get("landuse") in [
             "farmland",
             "meadow",
-            "grass"
+            "grass",
+            "recreation_ground",
+            "allotments",
+            "greenfield",
+            "brownfield"
+        ]:
+
+            feature_type = "open_land"
+
+        elif feature.get("natural") in [
+            "grassland",
+            "heath"
+        ]:
+
+            feature_type = "open_land"
+
+        elif feature.get("leisure") in [
+            "park",
+            "pitch",
+            "sports_centre",
+            "recreation_ground"
         ]:
 
             feature_type = "open_land"

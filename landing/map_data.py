@@ -47,3 +47,71 @@ def get_map_features(
         )
 
         return None
+
+
+def classify_features(features):
+    """
+    Classify OpenStreetMap features into
+    broad categories useful to AERIS.
+    """
+
+    if features is None:
+        return []
+
+    classified = []
+
+    for _, feature in features.iterrows():
+
+        feature_type = "unknown"
+
+        # -----------------------------
+        # Airport / runway
+        # -----------------------------
+
+        if feature.get("aeroway") in [
+            "aerodrome",
+            "runway",
+            "helipad"
+        ]:
+
+            feature_type = "airport"
+
+
+        # -----------------------------
+        # Roads
+        # -----------------------------
+
+        elif feature.get("highway"):
+
+            feature_type = "road"
+
+
+        # -----------------------------
+        # Land
+        # -----------------------------
+
+        elif feature.get("landuse") in [
+            "farmland",
+            "meadow",
+            "grass"
+        ]:
+
+            feature_type = "open_land"
+
+
+        # -----------------------------
+        # Save feature
+        # -----------------------------
+
+        if feature_type != "unknown":
+
+            classified.append({
+
+                "type": feature_type,
+
+                "geometry":
+                    feature.geometry
+
+            })
+
+    return classified

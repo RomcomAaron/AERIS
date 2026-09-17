@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 
-from landing.map_data import get_map_features
 from landing.coordinates import latlon_to_xy
 from landing.site_loader import load_landing_sites
 from landing.trajectory import evaluate_trajectory
@@ -8,13 +7,17 @@ from landing.approach import evaluate_approach
 from landing.site_detection import find_reachable_sites
 from landing.risk_engine import calculate_risk
 from simulation.aircraft import Aircraft
+from landing.map_data import (
+    get_map_features,
+    classify_features
+)
 from reachability.reachable_area import (
     generate_wind_aware_area
 )
 
 
 print("=================================")
-print("        AERIS 1.1")
+print("        AERIS 1.2")
 print("=================================")
 
 
@@ -33,6 +36,30 @@ map_features = get_map_features(
     radius=5000
 )
 
+classified_features = classify_features(
+    map_features
+)
+
+print("\n--- MAP FEATURE SUMMARY ---")
+
+feature_counts = {}
+
+for feature in classified_features:
+
+    feature_type = feature["type"]
+
+    if feature_type not in feature_counts:
+
+        feature_counts[feature_type] = 0
+
+    feature_counts[feature_type] += 1
+
+
+for feature_type, count in feature_counts.items():
+
+    print(
+        f"{feature_type}: {count}"
+    )
 # =================================
 # SIMULATE EMERGENCY
 # =================================
@@ -402,7 +429,7 @@ plt.ylabel(
 
 
 plt.title(
-    "AERIS 1.0 — Geographic Emergency Landing Analysis"
+    "AERIS 1.2 — Real Candidate Detection"
 )
 
 

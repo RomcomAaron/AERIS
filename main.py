@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+from landing.map_data import get_map_features
 from landing.coordinates import latlon_to_xy
 from landing.site_loader import load_landing_sites
 from landing.trajectory import evaluate_trajectory
@@ -13,7 +14,7 @@ from reachability.reachable_area import (
 
 
 print("=================================")
-print("        AERIS 1.0")
+print("        AERIS 1.1")
 print("=================================")
 
 
@@ -25,6 +26,12 @@ aircraft = Aircraft()
 
 aircraft_latitude = 13.0827
 aircraft_longitude = 80.2707
+
+map_features = get_map_features(
+    aircraft_latitude,
+    aircraft_longitude,
+    radius=5000
+)
 
 # =================================
 # SIMULATE EMERGENCY

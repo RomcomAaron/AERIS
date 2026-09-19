@@ -26,9 +26,13 @@ from reachability.reachability_filter import (
     filter_reachable_candidates
 )
 
+from reachability.approach_analysis import (
+    analyze_candidates
+)
+
 
 print("=================================")
-print("        AERIS 1.4")
+print("        AERIS 1.6")
 print("=================================")
 
 
@@ -256,6 +260,35 @@ reachable_candidates = (
         maximum_range / 1000
     )
 )
+
+analyzed_candidates = analyze_candidates(
+    reachable_candidates,
+    aircraft_latitude,
+    aircraft_longitude,
+    aircraft.wind_direction
+)
+
+print(
+    "\n--- APPROACH RESULTS ---"
+)
+
+for i, candidate in enumerate(
+    analyzed_candidates,
+    start=1
+):
+
+    print(
+        f"{i}. "
+        f"{candidate['type']} | "
+        f"Distance: "
+        f"{candidate['distance']:.2f} km | "
+        f"Turn: "
+        f"{candidate['turn_angle']:.1f}° "
+        f"({candidate['turn_status']}) | "
+        f"Wind alignment: "
+        f"{candidate['wind_alignment']:.1f}° "
+        f"({candidate['wind_status']})"
+    )
 
 
 # =================================
@@ -643,8 +676,7 @@ plt.ylabel(
 
 
 plt.title(
-    "AERIS 1.4 — "
-    "Automatic Candidate Landing-Site Extraction"
+    "AERIS 1.6 — Approach & Landing Direction Analysis"
 )
 
 

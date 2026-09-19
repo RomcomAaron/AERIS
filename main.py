@@ -11,13 +11,16 @@ from landing.map_data import (
     get_map_features,
     classify_features
 )
+from landing.candidate_generator import (
+    generate_candidates
+)
 from reachability.reachable_area import (
     generate_wind_aware_area
 )
 
 
 print("=================================")
-print("        AERIS 1.3")
+print("        AERIS 1.4")
 print("=================================")
 
 
@@ -40,6 +43,15 @@ classified_features = classify_features(
     map_features
 )
 
+candidates = generate_candidates(
+    classified_features,
+    minimum_length=100,
+    minimum_width=15,
+    maximum_candidates=50
+)
+
+
+
 print("\n--- MAP FEATURE SUMMARY ---")
 
 feature_counts = {}
@@ -59,6 +71,32 @@ for feature_type, count in feature_counts.items():
 
     print(
         f"{feature_type}: {count}"
+    )
+
+    print("\n--- AERIS GEOGRAPHIC CANDIDATES ---")
+
+print(
+    f"Candidates found: "
+    f"{len(candidates)}"
+)
+
+for i, candidate in enumerate(
+    candidates,
+    start=1
+):
+
+    print(
+        f"{i}. "
+        f"{candidate['type']} | "
+        f"Length: "
+        f"{candidate['length']:.0f} m | "
+        f"Width: "
+        f"{candidate['width']:.0f} m | "
+        f"Heading: "
+        f"{candidate['heading']:.1f}° | "
+        f"Location: "
+        f"{candidate['latitude']:.5f}, "
+        f"{candidate['longitude']:.5f}"
     )
 # =================================
 # SIMULATE EMERGENCY
@@ -429,7 +467,7 @@ plt.ylabel(
 
 
 plt.title(
-    "AERIS 1.3 — Candidate Classification"
+    "AERIS 1.4 (Automatic Candidate Landing-Site Extraction)"
 )
 
 

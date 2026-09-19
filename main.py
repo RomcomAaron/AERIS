@@ -17,7 +17,7 @@ from reachability.reachable_area import (
 
 
 print("=================================")
-print("        AERIS 1.2")
+print("        AERIS 1.3")
 print("=================================")
 
 
@@ -429,7 +429,7 @@ plt.ylabel(
 
 
 plt.title(
-    "AERIS 1.2 — Real Candidate Detection"
+    "AERIS 1.3 — Candidate Classification"
 )
 
 

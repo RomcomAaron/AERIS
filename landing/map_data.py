@@ -36,6 +36,10 @@ def get_map_features(
             f"{len(features)} map features."
         )
 
+        # ---------------------------------
+        # DEBUG: Inspect OSM tags
+        # ---------------------------------
+
         print("\n--- OSM TAG INSPECTION ---")
 
         for column in [
@@ -59,10 +63,13 @@ def get_map_features(
                 print(f"\n{column}:")
 
                 if len(values) == 0:
+
                     print("  No values found.")
 
                 else:
+
                     for value, count in values.items():
+
                         print(
                             f"  {value}: {count}"
                         )
@@ -73,7 +80,7 @@ def get_map_features(
                     f"\n{column}: COLUMN NOT FOUND"
                 )
 
-                return features
+        return features
 
     except Exception as error:
 
@@ -91,7 +98,10 @@ def get_map_features(
 def classify_features(features):
     """
     Classify OpenStreetMap features into
-    broad categories useful to AERIS.
+    categories relevant to AERIS.
+
+    Classification does NOT mean that a
+    location is safe for landing.
     """
 
     if features is None:
@@ -103,9 +113,9 @@ def classify_features(features):
 
         feature_type = "unknown"
 
-        # -----------------------------
-        # Airport / runway
-        # -----------------------------
+        # ---------------------------------
+        # 1. AIRPORT / RUNWAY / HELIPAD
+        # ---------------------------------
 
         if feature.get("aeroway") in [
             "aerodrome",
@@ -116,61 +126,84 @@ def classify_features(features):
             feature_type = "airport"
 
 
-        # -----------------------------
-        # Roads
-        # -----------------------------
-
-        elif feature.get("highway"):
-
-            feature_type = "road"
-
-
-        # -----------------------------
-        # Land
-        # -----------------------------
+        # ---------------------------------
+        # 2. OPEN LAND
+        # ---------------------------------
 
         elif feature.get("landuse") in [
+            "grass",
             "farmland",
             "meadow",
-            "grass",
             "recreation_ground",
-            "allotments",
-            "greenfield",
+            "village_green",
             "brownfield"
         ]:
 
             feature_type = "open_land"
+
+
+        # ---------------------------------
+        # 3. RECREATIONAL AREAS
+        # ---------------------------------
+
+        elif feature.get("leisure") in [
+            "park",
+            "pitch",
+            "common"
+        ]:
+
+            feature_type = "recreational_area"
+
+
+        # ---------------------------------
+        # 4. NATURAL OPEN AREAS
+        # ---------------------------------
 
         elif feature.get("natural") in [
             "grassland",
             "heath"
         ]:
 
-            feature_type = "open_land"
-
-        elif feature.get("leisure") in [
-            "park",
-            "pitch",
-            "sports_centre",
-            "recreation_ground"
-        ]:
-
-            feature_type = "open_land"
+            feature_type = "natural_area"
 
 
-        # -----------------------------
-        # Save feature
-        # -----------------------------
+        # ---------------------------------
+        # 5. ROADS
+        # ---------------------------------
+
+        elif feature.get("highway"):
+
+            highway_type = feature.get(
+                "highway"
+            )
+
+            if highway_type in [
+                "motorway",
+                "trunk",
+                "primary",
+                "secondary",
+                "tertiary"
+            ]:
+
+                feature_type = "major_road"
+
+            elif highway_type in [
+                "residential",
+                "living_street"
+            ]:
+
+                feature_type = "minor_road"
+
+
+        # ---------------------------------
+        # 6. SAVE
+        # ---------------------------------
 
         if feature_type != "unknown":
 
             classified.append({
-
                 "type": feature_type,
-
-                "geometry":
-                    feature.geometry
-
+                "geometry": feature.geometry
             })
 
     return classified

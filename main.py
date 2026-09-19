@@ -5,8 +5,10 @@ from landing.site_loader import load_landing_sites
 from landing.trajectory import evaluate_trajectory
 from landing.approach import evaluate_approach
 from landing.site_detection import find_reachable_sites
-from landing.risk_engine import calculate_risk
-
+from landing.risk_engine import (
+    calculate_risk,
+    rank_candidates
+)
 from simulation.aircraft import Aircraft
 
 from landing.map_data import (
@@ -32,7 +34,7 @@ from reachability.approach_analysis import (
 
 
 print("=================================")
-print("        AERIS 1.6")
+print("        AERIS 1.7")
 print("=================================")
 
 
@@ -267,6 +269,52 @@ analyzed_candidates = analyze_candidates(
     aircraft_longitude,
     aircraft.wind_direction
 )
+
+
+ranked_candidates = rank_candidates(
+    analyzed_candidates,
+    maximum_range / 1000
+)
+
+print(
+    "\n--- AERIS RISK ANALYSIS ---"
+)
+
+for i, candidate in enumerate(
+    ranked_candidates,
+    start=1
+):
+
+    print(
+        f"\n{i}. {candidate['type']}"
+    )
+
+    print(
+        f"   Distance: "
+        f"{candidate['distance']:.2f} km"
+    )
+
+    print(
+        f"   Dimensions: "
+        f"{candidate['length']:.0f} m × "
+        f"{candidate['width']:.0f} m"
+    )
+
+    print(
+        f"   Turn: "
+        f"{candidate['turn_angle']:.1f}°"
+    )
+
+    print(
+        f"   Wind alignment: "
+        f"{candidate['wind_alignment']:.1f}°"
+    )
+
+    print(
+        f"   Risk score: "
+        f"{candidate['risk_score']:.3f}"
+    )
+
 
 print(
     "\n--- APPROACH RESULTS ---"
@@ -676,7 +724,7 @@ plt.ylabel(
 
 
 plt.title(
-    "AERIS 1.6 — Approach & Landing Direction Analysis"
+    "AERIS 1.7 — Risk Engine"
 )
 
 

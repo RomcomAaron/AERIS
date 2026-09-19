@@ -6,16 +6,24 @@ from landing.trajectory import evaluate_trajectory
 from landing.approach import evaluate_approach
 from landing.site_detection import find_reachable_sites
 from landing.risk_engine import calculate_risk
+
 from simulation.aircraft import Aircraft
+
 from landing.map_data import (
     get_map_features,
     classify_features
 )
+
 from landing.candidate_generator import (
     generate_candidates
 )
+
 from reachability.reachable_area import (
     generate_wind_aware_area
+)
+
+from reachability.reachability_filter import (
+    filter_reachable_candidates
 )
 
 
@@ -30,74 +38,15 @@ print("=================================")
 
 aircraft = Aircraft()
 
+
+# =================================
+# AIRCRAFT LOCATION
+# =================================
+
 aircraft_latitude = 13.0827
 aircraft_longitude = 80.2707
 
-map_features = get_map_features(
-    aircraft_latitude,
-    aircraft_longitude,
-    radius=5000
-)
 
-classified_features = classify_features(
-    map_features
-)
-
-candidates = generate_candidates(
-    classified_features,
-    minimum_length=100,
-    minimum_width=15,
-    maximum_candidates=50
-)
-
-
-
-print("\n--- MAP FEATURE SUMMARY ---")
-
-feature_counts = {}
-
-for feature in classified_features:
-
-    feature_type = feature["type"]
-
-    if feature_type not in feature_counts:
-
-        feature_counts[feature_type] = 0
-
-    feature_counts[feature_type] += 1
-
-
-for feature_type, count in feature_counts.items():
-
-    print(
-        f"{feature_type}: {count}"
-    )
-
-    print("\n--- AERIS GEOGRAPHIC CANDIDATES ---")
-
-print(
-    f"Candidates found: "
-    f"{len(candidates)}"
-)
-
-for i, candidate in enumerate(
-    candidates,
-    start=1
-):
-
-    print(
-        f"{i}. "
-        f"{candidate['type']} | "
-        f"Length: "
-        f"{candidate['length']:.0f} m | "
-        f"Width: "
-        f"{candidate['width']:.0f} m | "
-        f"Heading: "
-        f"{candidate['heading']:.1f}° | "
-        f"Location: "
-        f"{candidate['latitude']:.5f}, "
-        f"{candidate['longitude']:.5f}"
-    )
 # =================================
 # SIMULATE EMERGENCY
 # =================================
@@ -163,7 +112,7 @@ x, y, distances = generate_wind_aware_area(
 
 
 # =================================
-# RANGE
+# CALCULATE REACHABLE RANGE
 # =================================
 
 minimum_range = distances.min()
@@ -185,29 +134,205 @@ print(
 
 
 # =================================
-# LANDING SITES
+# DOWNLOAD REAL MAP DATA
+# =================================
+
+map_features = get_map_features(
+
+    aircraft_latitude,
+
+    aircraft_longitude,
+
+    radius=5000
+)
+
+
+# =================================
+# CLASSIFY MAP FEATURES
+# =================================
+
+classified_features = classify_features(
+    map_features
+)
+
+
+# =================================
+# MAP FEATURE SUMMARY
+# =================================
+
+print("\n--- MAP FEATURE SUMMARY ---")
+
+feature_counts = {}
+
+
+for feature in classified_features:
+
+    feature_type = feature["type"]
+
+    if feature_type not in feature_counts:
+
+        feature_counts[feature_type] = 0
+
+    feature_counts[feature_type] += 1
+
+
+for feature_type, count in feature_counts.items():
+
+    print(
+        f"{feature_type}: {count}"
+    )
+
+
+# =================================
+# GENERATE GEOGRAPHIC CANDIDATES
+# =================================
+
+candidates = generate_candidates(
+
+    classified_features,
+
+    minimum_length=100,
+
+    minimum_width=15,
+
+    maximum_candidates=50
+)
+
+
+# =================================
+# DISPLAY GEOGRAPHIC CANDIDATES
+# =================================
+
+print(
+    "\n--- AERIS GEOGRAPHIC CANDIDATES ---"
+)
+
+print(
+    f"Candidates found: "
+    f"{len(candidates)}"
+)
+
+
+for i, candidate in enumerate(
+    candidates,
+    start=1
+):
+
+    print(
+
+        f"{i}. "
+
+        f"{candidate['type']} | "
+
+        f"Length: "
+        f"{candidate['length']:.0f} m | "
+
+        f"Width: "
+        f"{candidate['width']:.0f} m | "
+
+        f"Heading: "
+        f"{candidate['heading']:.1f}° | "
+
+        f"Location: "
+        f"{candidate['latitude']:.5f}, "
+        f"{candidate['longitude']:.5f}"
+
+    )
+
+
+# =================================
+# FILTER BY AIRCRAFT REACHABILITY
+# =================================
+
+reachable_candidates = (
+    filter_reachable_candidates(
+
+        candidates,
+
+        aircraft_latitude,
+
+        aircraft_longitude,
+
+        maximum_range / 1000
+    )
+)
+
+
+# =================================
+# DISPLAY REACHABLE CANDIDATES
+# =================================
+
+print(
+    "\n--- REACHABLE LANDING CANDIDATES ---"
+)
+
+print(
+    f"Reachable candidates: "
+    f"{len(reachable_candidates)}"
+)
+
+
+for i, candidate in enumerate(
+
+    reachable_candidates,
+
+    start=1
+
+):
+
+    print(
+
+        f"{i}. "
+
+        f"{candidate['type']} | "
+
+        f"Distance: "
+        f"{candidate['distance']:.2f} km | "
+
+        f"Length: "
+        f"{candidate['length']:.0f} m | "
+
+        f"Width: "
+        f"{candidate['width']:.0f} m | "
+
+        f"Heading: "
+        f"{candidate['heading']:.1f}°"
+
+    )
+
+
+# =================================
+# OLD / MANUAL LANDING SITES
+# =================================
+# Kept for compatibility with the
+# existing AERIS risk/trajectory system.
 # =================================
 
 sites = load_landing_sites(
     "data/landing_sites.json"
 )
 
+
 for site in sites:
 
-    x, y = latlon_to_xy(
+    x_site, y_site = latlon_to_xy(
 
         site["latitude"],
+
         site["longitude"],
 
         aircraft_latitude,
+
         aircraft_longitude
     )
 
-    site["x"] = x
-    site["y"] = y
+    site["x"] = x_site
+
+    site["y"] = y_site
+
 
 # =================================
-# FIND REACHABLE SITES
+# FIND REACHABLE MANUAL SITES
 # =================================
 
 reachable_sites = find_reachable_sites(
@@ -226,17 +351,21 @@ reachable_sites = find_reachable_sites(
 # RISK ANALYSIS
 # =================================
 
-print("\n--- CANDIDATE LANDING SITES ---")
+print(
+    "\n--- CANDIDATE LANDING SITES ---"
+)
 
 
 for site in reachable_sites:
 
     # -----------------------------
-    # Risk calculation
+    # Risk
     # -----------------------------
 
     risk = calculate_risk(
+
         site,
+
         maximum_range / 1000
     )
 
@@ -244,7 +373,7 @@ for site in reachable_sites:
 
 
     # -----------------------------
-    # Approach calculation
+    # Approach
     # -----------------------------
 
     approach = evaluate_approach(
@@ -264,8 +393,9 @@ for site in reachable_sites:
         approach["feasible"]
     )
 
-        # -----------------------------
-    # Trajectory calculation
+
+    # -----------------------------
+    # Trajectory
     # -----------------------------
 
     trajectory = evaluate_trajectory(
@@ -298,42 +428,69 @@ for site in reachable_sites:
     )
 
 
+    # -----------------------------
+    # Display
+    # -----------------------------
+
     print(
+
         f"{site['name']} "
+
         f"({site['type']}) "
+
         f"- Distance: "
         f"{site['distance']:.2f} km "
+
         f"- Risk: "
         f"{risk:.3f} "
+
         f"- Turn: "
         f"{site['turn_angle']:.1f}° "
+
         f"- Approach: "
         f"{'YES' if site['approach_feasible'] else 'NO'} "
+
         f"- Altitude margin: "
         f"{site['remaining_altitude']:.0f} m "
+
         f"- Trajectory: "
         f"{'YES' if site['trajectory_feasible'] else 'NO'}"
+
     )
+
+
+# =================================
+# FIND FEASIBLE MANUAL SITES
+# =================================
+
+feasible_sites = [
+
+    site
+
+    for site in reachable_sites
+
+    if (
+
+        site["approach_feasible"]
+
+        and
+
+        site["trajectory_feasible"]
+
+    )
+
+]
 
 
 # =================================
 # SORT BY RISK
 # =================================
 
-feasible_sites = [
-    site
-    for site in reachable_sites
-    if (
-        site["approach_feasible"]
-        and
-        site["trajectory_feasible"]
-    )
-]
-
-
 feasible_sites.sort(
+
     key=lambda site:
     site["risk"]
+
 )
 
 
@@ -341,7 +498,9 @@ feasible_sites.sort(
 # RECOMMENDATION
 # =================================
 
-print("\n--- AERIS RECOMMENDATION ---")
+print(
+    "\n--- AERIS RECOMMENDATION ---"
+)
 
 
 if feasible_sites:
@@ -350,31 +509,39 @@ if feasible_sites:
 
 
     print(
+
         f"Recommended site: "
         f"{best_site['name']}"
+
     )
 
     print(
+
         f"Type: "
         f"{best_site['type']}"
+
     )
 
     print(
+
         f"Distance: "
         f"{best_site['distance']:.2f} km"
+
     )
 
     print(
+
         f"Risk score: "
         f"{best_site['risk']:.3f}"
+
     )
 
 else:
 
     print(
-    "NO REACHABLE SITE WITH "
-    "FEASIBLE APPROACH FOUND"
-)
+        "NO REACHABLE SITE WITH "
+        "FEASIBLE APPROACH FOUND"
+    )
 
 
 # =================================
@@ -386,7 +553,9 @@ plt.figure(
 )
 
 
-# Reachable boundary
+# =================================
+# REACHABLE BOUNDARY
+# =================================
 
 plt.plot(
 
@@ -398,7 +567,9 @@ plt.plot(
 )
 
 
-# Aircraft
+# =================================
+# AIRCRAFT
+# =================================
 
 plt.scatter(
 
@@ -420,7 +591,9 @@ plt.text(
 )
 
 
-# Landing sites
+# =================================
+# MANUAL LANDING SITES
+# =================================
 
 for site in sites:
 
@@ -452,10 +625,13 @@ for site in sites:
         site["y"],
 
         f"  {site['name']}"
+
     )
 
 
-# Graph labels
+# =================================
+# GRAPH LABELS
+# =================================
 
 plt.xlabel(
     "East / West (km)"
@@ -467,7 +643,8 @@ plt.ylabel(
 
 
 plt.title(
-    "AERIS 1.4 (Automatic Candidate Landing-Site Extraction)"
+    "AERIS 1.4 — "
+    "Automatic Candidate Landing-Site Extraction"
 )
 
 
